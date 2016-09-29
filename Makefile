@@ -1,37 +1,26 @@
 CPPC = g++
-CPPFLAGS = -Wall -pedantic -std=c++14 -I/user/local/include
+CPPFLAGS = -Wall -pedantic -std=c++14 -I/user/local/include -Iinclude
 LDFLAGS = -L/usr/local/lib -lgmp
 
-SRCS = main.cpp ElGamal.cpp
+SRCS = $(shell find src -type f -name '*.cpp')
+OBJS = $(patsubst src/%.cpp,obj/%.o,$(SRCS))
 EXECUTABLE = main
 
 debug: CPPFLAGS += -g -DDEBUG
-debug: MODE = Debug
 release: CPPFLAGS += -O2 -Dsecure_exponentiation -DNDEBUG
-release: MODE = Release
-debug release: $(EXECUTABLE)
-
-OBJS = $(patsubst %.cpp,$(MODE)/obj/%.o,$(SRCS))
+debug release: bin/$(EXECUTABLE)
 
 # Link program.  Library argument must come last or the linker will complain.
 # (Not 100% sure why.)
-executable: $(OBJS) | $(MODE)/bin/
-	$(CPPC) $(OBJS) -o $(MODE)/bin/$(EXECUTABLE) $(LDFLAGS)
-
-# Create obj directory if missing.
-$(OBJS): | $(MODE)/obj/
-
-$(MODE)/%/:
-	@mkdir -p $@
+bin/$(EXECUTABLE): $(OBJS)
+	@mkdir -p $(@D)
+	$(CPPC) $(OBJS) -o $@ $(LDFLAGS)
 
 # Rule for compiling source files.
-%.o: %.cpp
+obj/%.o : src/%.cpp
+	@mkdir -p $(@D)
 	$(CPPC) $(CPPFLAGS) -c $< -o $@
 
-# Delete all object files.
+# Delete all object and binary files.
 clean:
-	$(RM) -r Debug/obj/ Release/obj/
-
-# Delete linked program.
-dist-clean:
-	$(RM) -r Debug/bin/ Release/bin/
+	$(RM) -r bin obj
