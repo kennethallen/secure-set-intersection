@@ -3,6 +3,7 @@ CPPFLAGS = -Wall -pedantic -std=c++14 -I/user/local/include -Iinclude
 LDFLAGS = -L/usr/local/lib -lgmp
 
 SRCS = $(shell find src -type f -name '*.cpp')
+HDRS = $(shell find include -type f -name '*.h')
 OBJS = $(patsubst src/%.cpp,obj/%.o,$(SRCS))
 EXECUTABLE = main
 
@@ -17,10 +18,12 @@ bin/$(EXECUTABLE): $(OBJS)
 	$(CPPC) $(OBJS) -o $@ $(LDFLAGS)
 
 # Rule for compiling source files.
-obj/%.o : src/%.cpp
+obj/%.o : src/%.cpp $(HDRS)
 	@mkdir -p $(@D)
 	$(CPPC) $(CPPFLAGS) -c $< -o $@
 
 # Delete all object and binary files.
 clean:
 	$(RM) -r bin obj
+
+.PHONY: debug release clean

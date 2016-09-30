@@ -86,9 +86,11 @@ namespace ElGamal {
 	mpz_class Params::modInv(const mpz_class& n) const
 	{
 		mpz_class out;
-		const int invertOutcome = mpz_invert(
-				out.get_mpz_t(), n.get_mpz_t(), p.get_mpz_t());
-		assert(invertOutcome != 0);
+#if NDEBUG
+		mpz_invert( out.get_mpz_t(), n.get_mpz_t(), p.get_mpz_t());
+#else
+		assert(0 != mpz_invert(out.get_mpz_t(), n.get_mpz_t(), p.get_mpz_t()));
+#endif
 		return out;
 	}
 	
@@ -154,40 +156,58 @@ namespace ElGamal {
 		return (cipher.c * params.modExp(cipher.B, -a)) % params.p;
 	}
 	
+}
+	#include <iostream>
+	using std::cout;
+	using std::endl;
+namespace ElGamal {
 	vector<Keyshare> PrivateKey::generateShares(const Params& params,
-			const unsigned num, gmp_randclass& rand) const
+			const unsigned threshold, const unsigned numShares,
+			gmp_randclass& rand) const
 	{
 		vector<mpz_class> coeffs;
-		coeffs.reserve(num);
-		for (unsigned i = 0; i < num; i++)
+		coeffs.reserve(threshold - 1);
+		for (unsigned pow = 1; pow < threshold; pow++)
 			coeffs.emplace_back(rand.get_z_range(params.p));
 		
 		vector<Keyshare> shares;
-		coeffs.reserve(num);
-		for (unsigned x = 1; x <= num; x++)
+		coeffs.reserve(numShares);
+		for (unsigned x = 1; x <= numShares; x++)
 		{
 			mpz_class y = a;
-			for (unsigned i = 0, xPow = x; i < coeffs.size(); i++, xPow *= x)
-				y += coeffs[i] * xPow;
+			// DEBUG
+//			cout << "x^0 * " << y.get_str() << " = " << y.get_str() << '\n';
+			for (unsigned pow = 1, xPow = x;
+					pow <= coeffs.size();
+					pow++, xPow *= x)
+					{
+				y += coeffs[pow - 1] * xPow;
+						// DEBUG
+//						cout << "+(x^" << pow << " * " << coeffs[pow - 1].get_str()
+//								<< " = " << mpz_class(coeffs[pow - 1] * xPow).get_str()
+//								<< ") = " << y.get_str() << '\n';
+					}
+				
 			shares.emplace_back(Keyshare(x, y % params.p));
 		}
 		return shares;
 	}
 	
-	long DecryptShare::lagrangeFactor(const Params& params,
+	mpz_class DecryptShare::lagrangeFactor(const Params& params,
 			const vector<DecryptShare>& shares) const
 	{
-		long num = 1, denom = 1;
+		mpq_class product(1);
 		for (auto share : shares)
 		{
 			if (x == share.x)
 				continue;
-			num *= -share.x;
-			denom *= x - share.x;
+			product *= mpq_class(share.x,
+					static_cast<int>(share.x) - static_cast<int>(x));
 		}
 		
-		assert((num%denom) == 0);
-		return num/denom;
+		product.canonicalize();
+		assert(product.get_den() == 1);
+		return product.get_num();
 	}
 	
 	mpz_class Ciphertext::decryptWith(const Params& params,

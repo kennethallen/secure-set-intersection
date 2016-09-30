@@ -15,7 +15,7 @@ namespace ElGamal {
 	typedef std::pair<PrivateKey, PublicKey> KeyPair;
 	class DecryptShare;
 
-	mpz_class powerOf2(const unsigned);
+	mpz_class powerOf2(unsigned);
 	int tryLogBase2(const mpz_class&, unsigned low, unsigned high);
 	int tryLogBase2(const Params&, const mpz_class&);
 
@@ -29,7 +29,7 @@ namespace ElGamal {
 		unsigned modulusBits() const;
 		KeyPair makeKeys(gmp_randclass&) const;
 		mpz_class modExp(const mpz_class& base, const mpz_class& pow) const;
-		mpz_class modExp(const mpz_class& base, const unsigned pow) const;
+		mpz_class modExp(const mpz_class& base, unsigned pow) const;
 		mpz_class modInv(const mpz_class&) const;
 	};
 
@@ -42,7 +42,7 @@ namespace ElGamal {
 		Ciphertext(mpz_class _B0, mpz_class _c) : B(move(_B0)), c(move(_c)) { }
 		void mult(const Params&, const mpz_class& plaintextFactor);
 		void mult(const Params&, const Ciphertext& ciphertextFactor);
-		void pow(const Params&, const unsigned power);
+		void pow(const Params&, unsigned power);
 		void encryptPrecomputed(const Params&, const mpz_class& msg);
 		
 		mpz_class decryptWith(const Params&,
@@ -67,7 +67,8 @@ namespace ElGamal {
 		mpz_class share; // B^(keyshare's y) mod p
 		
 		DecryptShare(unsigned _x, mpz_class _s) : x(_x), share(move(_s)) { }
-		long lagrangeFactor(const Params&, const vector<DecryptShare>&) const;
+		mpz_class lagrangeFactor(const Params&,
+				const vector<DecryptShare>&) const;
 	};
 	
 	class Keyshare
@@ -87,8 +88,8 @@ namespace ElGamal {
 
 		PrivateKey(mpz_class _a) : a(move(_a)) { }
 		mpz_class decrypt(const Params&, const Ciphertext&) const;
-		vector<Keyshare> generateShares(const Params&,
-				const unsigned num, gmp_randclass&) const;
+		vector<Keyshare> generateShares(const Params&, unsigned threshold,
+				unsigned numShares, gmp_randclass&) const;
 	};
 
 }

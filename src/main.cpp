@@ -4,21 +4,29 @@
 using namespace std;
 using namespace ElGamal;
 
-// Generated via WolframAlpha with query
-// NextPrime[RandomInteger[{2^2047, 2^2048 - 1}]]
-const mpz_class examplePrime2048("2326947137714200530576306592137994166647"
-		"31018935991342300383362834440332285084354016760584592963994750737"
-		"84976693102762094021960948437186598373448972361943112395383369839"
-		"33403205671191999200312450873298491316982581426808936030822577986"
-		"23479652433420482940361754749532966001733242497936216457457478124"
-		"10010138050014924168977696064860217934423820631768414917668025181"
-		"49842439149161341941142464649982992254736261801291339150737425155"
-		"26257311774033375074610794958570909760040205969018376255103309726"
-		"65013668449319107009643689344541922564501337067551530076879504006"
-		"300195645658951599597753082457935644344685069504949373939");
-// Generated via WolframAlpha with query
-// NextPrime[RandomInteger[{2^15, 2^16 - 1}]]		
+// WolframAlpha: NextPrime[RandomInteger[{2^2047, 2^2048 - 1}]]
+const mpz_class examplePrime2048("232694713771420053057630659213799416664731018"
+		"9359913423003833628344403322850843540167605845929639947507378497669310"
+		"2762094021960948437186598373448972361943112395383369839334032056711919"
+		"9920031245087329849131698258142680893603082257798623479652433420482940"
+		"3617547495329660017332424979362164574574781241001013805001492416897769"
+		"6064860217934423820631768414917668025181498424391491613419411424646499"
+		"8299225473626180129133915073742515526257311774033375074610794958570909"
+		"7600402059690183762551033097266501366844931910700964368934454192256450"
+		"1337067551530076879504006300195645658951599597753082457935644344685069"
+		"504949373939");
+
+// WolframAlpha: NextPrime[RandomInteger[{2^511, 2^512 - 1}]]
+const mpz_class examplePrime512("1188079157195371837740287837372032314777428766"
+		"8030217970706261563262339372869147702623362771035225481725961888214611"
+		"801269114442842045500352749369483590123");
+
+// WolframAlpha: NextPrime[RandomInteger[{2^15, 2^16 - 1}]]
 const mpz_class examplePrime16(64151);
+
+// WolframAlpha: NextPrime[RandomInteger[{2^7, 2^8 - 1}]]
+const mpz_class examplePrime8(149);
+
 
 void testBasicElGamal(const Params& params, gmp_randclass& rand)
 {
@@ -28,18 +36,18 @@ void testBasicElGamal(const Params& params, gmp_randclass& rand)
 	cout << "PrivateKey: a=" << priv.a.get_str() << "\n\n";
 	cout << "PublicKey: A=" << pub.A.get_str() << "\n\n";
 	
-	cout << "Enter msg (number in range [0, p)): " << flush;
-	string line;
-	getline(cin, line);
-	const mpz_class msg(line);
+	cout << "Enter message (number in range [0, p)): " << flush;
+	string token;
+	cin >> token;
+	const mpz_class msg(token);
 	cout << "msg=" << msg.get_str() << "\n\n";
 	
 	const Ciphertext cipher = pub.encrypt(params, msg, rand);
 	cout << "Ciphertext: B=" << cipher.B.get_str()
 			<< ", c=" << cipher.c.get_str() << "\n\n";
 	
-	const mpz_class recoveredMessage = priv.decrypt(params, cipher);
-	cout << "recoveredMessage=" << recoveredMessage.get_str() << endl;
+	const mpz_class recoveredMsg = priv.decrypt(params, cipher);
+	cout << "recoveredMsg=" << recoveredMsg.get_str() << endl;
 }
 
 void testExpElGamal(const Params& params, gmp_randclass& rand)
@@ -50,7 +58,7 @@ void testExpElGamal(const Params& params, gmp_randclass& rand)
 	cout << "PrivateKey: a=" << priv.a.get_str() << "\n\n";
 	cout << "PublicKey: A=" << pub.A.get_str() << "\n\n";
 	
-	cout << "Enter msg (number in range [0, " << params.modulusBits()
+	cout << "Enter message (number in range [0, " << params.modulusBits()
 			<< ")): " << flush;
 	unsigned msg;
 	cin >> msg;
@@ -115,16 +123,22 @@ void testThresholdElGamal(const Params& params, gmp_randclass& rand)
 	cout << "PrivateKey: a=" << priv.a.get_str() << "\n\n";
 	cout << "PublicKey: A=" << pub.A.get_str() << "\n\n";
 	
-	const vector<Keyshare> keyshares = priv.generateShares(params, 3, rand);
+	cout << "Enter number of keyshares: " << flush;
+	unsigned numKeyshares;
+	cin >> numKeyshares;
+	cout << "numKeyshares=" << numKeyshares << '\n';
+	
+	const vector<Keyshare> keyshares = priv.generateShares(params,
+			numKeyshares, numKeyshares, rand);
 	for (auto share : keyshares)
 		cout << "Keyshare: x=" << share.x
 				<< ", y=" << share.y.get_str() << '\n';
 	cout << '\n';
 	
-	cout << "Enter msg (number in range [0, p)): " << flush;
-	string line;
-	getline(cin, line);
-	const mpz_class msg(line);
+	cout << "Enter message (number in range [0, p)): " << flush;
+	string token;
+	cin >> token;
+	const mpz_class msg(token);
 	cout << "msg=" << msg.get_str() << "\n\n";
 	
 	const Ciphertext cipher = pub.encrypt(params, msg, rand);
@@ -143,20 +157,91 @@ void testThresholdElGamal(const Params& params, gmp_randclass& rand)
 	cout << '\n';
 	
 	const mpz_class recoveredMsg = cipher.decryptWith(params, decryptionShares);
-	cout << "recoveredMessage=" << recoveredMsg.get_str() << endl;
+	cout << "recoveredMsg=" << recoveredMsg.get_str() << endl;
+}
+
+int testThresholdElGamalErrorIter(const Params& params, gmp_randclass& rand)
+{
+	const KeyPair keyPair = params.makeKeys(rand);
+	const PrivateKey priv = get<PrivateKey>(keyPair);
+	const PublicKey pub = get<PublicKey>(keyPair);
+//	cout << "PrivateKey: a=" << priv.a.get_str() << "\n\n";
+//	cout << "PublicKey: A=" << pub.A.get_str() << "\n\n";
+	
+//	cout << "Enter number of keyshares: " << flush;
+	unsigned numKeyshares;
+//	cin >> numKeyshares;
+//	cout << "numKeyshares=" << numKeyshares << '\n';
+	numKeyshares = 2;
+	
+	const vector<Keyshare> keyshares = priv.generateShares(params,
+			numKeyshares, numKeyshares, rand);
+//	for (auto share : keyshares)
+//		cout << "Keyshare: x=" << share.x
+//				<< ", y=" << share.y.get_str() << '\n';
+//	cout << '\n';
+	
+//	cout << "Enter message (number in range [0, p)): " << flush;
+//	string token;
+//	cin >> token;
+//	const mpz_class msg(token);
+//	cout << "msg=" << msg.get_str() << "\n\n";
+	const mpz_class msg(1);
+	
+	const Ciphertext cipher = pub.encrypt(params, msg, rand);
+//	cout << "Ciphertext: B=" << cipher.B.get_str()
+//			<< ", c=" << cipher.c.get_str() << "\n\n";
+	
+	vector<DecryptShare> decryptionShares;
+	decryptionShares.reserve(keyshares.size());
+	for (auto keyshare : keyshares)
+	{
+		const DecryptShare decryptShare = keyshare.decryptShare(params, cipher);
+//		cout << "DecryptShare: x=" << decryptShare.x
+//				<< ", share=" << decryptShare.share.get_str() << '\n';
+		decryptionShares.push_back(decryptShare);
+	}
+//	cout << '\n';
+	
+	const mpz_class recoveredMsg = cipher.decryptWith(params, decryptionShares);
+//	cout << "recoveredMsg=" << recoveredMsg.get_str() << endl;
+	
+	if (recoveredMsg == 1)
+		return 0;
+	for (int i = 1; ; i++) {
+		if (recoveredMsg == params.modExp(cipher.B, i))
+			return i;
+		if (recoveredMsg == params.modExp(cipher.B, mpz_class(-i)))
+			return -i;
+	}
+}
+
+void testThresholdElGamalError(const Params& params, gmp_randclass& rand)
+{
+	for (unsigned i = 0; ; i++)
+	{
+		const int error = testThresholdElGamalErrorIter(params, rand);
+		cout << error << ' ';
+		if (i % 100 == 0)
+			cout << flush;
+		
+		if (abs(error) > 1)
+			break;
+	}
+	cout << endl;
 }
 
 int main() {
 	gmp_randclass rand(gmp_randinit_default);
 	rand.seed(time(nullptr));
 	
-	const mpz_class p = examplePrime16;
+	const mpz_class p = examplePrime2048;
 	const mpz_class g = rand.get_z_range(p - 3) + 2;
 	const Params params(p, g);
 	cout << "Params: g=" << params.g.get_str()
 			<< ", p=" << params.p.get_str() << "\n\n";
 	
-	testThresholdElGamal(params, rand);
+	testThresholdElGamalError(params, rand);
 	
 	return 0;
 }
