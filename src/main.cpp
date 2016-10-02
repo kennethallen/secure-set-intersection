@@ -172,7 +172,7 @@ int testThresholdElGamalErrorIter(const Params& params, gmp_randclass& rand)
 	unsigned numKeyshares;
 //	cin >> numKeyshares;
 //	cout << "numKeyshares=" << numKeyshares << '\n';
-	numKeyshares = 2;
+	numKeyshares = 3;
 	
 	const vector<Keyshare> keyshares = priv.generateShares(params,
 			numKeyshares, numKeyshares, rand);
@@ -218,16 +218,22 @@ int testThresholdElGamalErrorIter(const Params& params, gmp_randclass& rand)
 
 void testThresholdElGamalError(const Params& params, gmp_randclass& rand)
 {
-	for (unsigned i = 0; ; i++)
+	unsigned hist[7] = {};
+	for (unsigned i = 0; i < 10000; i++)
 	{
 		const int error = testThresholdElGamalErrorIter(params, rand);
 		cout << error << ' ';
 		if (i % 100 == 0)
 			cout << flush;
 		
-		if (abs(error) > 1)
+		if (abs(error) > 3)
 			break;
+		hist[error + 3]++;
 	}
+	cout << '\n';
+	for (auto freq : hist)
+		cout << freq << ' ';
+	
 	cout << endl;
 }
 
@@ -235,7 +241,7 @@ int main() {
 	gmp_randclass rand(gmp_randinit_default);
 	rand.seed(time(nullptr));
 	
-	const mpz_class p = examplePrime2048;
+	const mpz_class p = examplePrime512;
 	const mpz_class g = rand.get_z_range(p - 3) + 2;
 	const Params params(p, g);
 	cout << "Params: g=" << params.g.get_str()
