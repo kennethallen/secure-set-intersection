@@ -33,21 +33,21 @@ void testBasicElGamal(const Params& params, gmp_randclass& rand)
 	const KeyPair keyPair = params.makeKeys(rand);
 	const PrivateKey priv = get<PrivateKey>(keyPair);
 	const PublicKey pub = get<PublicKey>(keyPair);
-	cout << "PrivateKey: a=" << priv.a.get_str() << "\n\n";
-	cout << "PublicKey: A=" << pub.A.get_str() << "\n\n";
+	cout << "PrivateKey: a=" << priv.a.get_mpz_t() << "\n\n";
+	cout << "PublicKey: A=" << pub.A.get_mpz_t() << "\n\n";
 	
 	cout << "Enter message (number in range [0, p)): " << flush;
 	string token;
 	cin >> token;
 	const mpz_class msg(token);
-	cout << "msg=" << msg.get_str() << "\n\n";
+	cout << "msg=" << msg.get_mpz_t() << "\n\n";
 	
 	const Ciphertext cipher = pub.encrypt(params, msg, rand);
-	cout << "Ciphertext: B=" << cipher.B.get_str()
-			<< ", c=" << cipher.c.get_str() << "\n\n";
+	cout << "Ciphertext: B=" << cipher.B.get_mpz_t()
+			<< ", c=" << cipher.c.get_mpz_t() << "\n\n";
 	
 	const mpz_class recoveredMsg = priv.decrypt(params, cipher);
-	cout << "recoveredMsg=" << recoveredMsg.get_str() << endl;
+	cout << "recoveredMsg=" << recoveredMsg.get_mpz_t() << endl;
 }
 
 void testExpElGamal(const Params& params, gmp_randclass& rand)
@@ -55,23 +55,23 @@ void testExpElGamal(const Params& params, gmp_randclass& rand)
 	const KeyPair keyPair = params.makeKeys(rand);
 	const PrivateKey priv = get<PrivateKey>(keyPair);
 	const PublicKey pub = get<PublicKey>(keyPair);
-	cout << "PrivateKey: a=" << priv.a.get_str() << "\n\n";
-	cout << "PublicKey: A=" << pub.A.get_str() << "\n\n";
+	cout << "PrivateKey: a=" << priv.a.get_mpz_t() << "\n\n";
+	cout << "PublicKey: A=" << pub.A.get_mpz_t() << "\n\n";
 	
-	cout << "Enter message (number in range [0, " << params.modulusBits()
+	cout << "Enter message (number in range [0, " << params.keyBits
 			<< ")): " << flush;
 	unsigned msg;
 	cin >> msg;
 	mpz_class expMsg = powerOf2(msg);
-	cout << "msg=" << msg << ", expMsg=" << expMsg.get_str() << "\n\n";
+	cout << "msg=" << msg << ", expMsg=" << expMsg.get_mpz_t() << "\n\n";
 	
 	const Ciphertext cipher = pub.encrypt(params, expMsg, rand);
-	cout << "Ciphertext: B=" << cipher.B.get_str()
-			<< ", c=" << cipher.c.get_str() << "\n\n";
+	cout << "Ciphertext: B=" << cipher.B.get_mpz_t()
+			<< ", c=" << cipher.c.get_mpz_t() << "\n\n";
 	
 	const mpz_class recoveredExpMsg = priv.decrypt(params, cipher);
 	const int recoveredMsg = tryLogBase2(params, recoveredExpMsg);
-	cout << "recoveredExpMsg=" << recoveredExpMsg.get_str()
+	cout << "recoveredExpMsg=" << recoveredExpMsg.get_mpz_t()
 			<< ", recoveredMsg=" << recoveredMsg << endl;
 }
 
@@ -80,38 +80,38 @@ void testHomomorphicExpElGamal(const Params& params, gmp_randclass& rand)
 	const KeyPair keyPair = params.makeKeys(rand);
 	const PrivateKey priv = get<PrivateKey>(keyPair);
 	const PublicKey pub = get<PublicKey>(keyPair);
-	cout << "PrivateKey: a=" << priv.a.get_str() << "\n\n";
-	cout << "PublicKey: A=" << pub.A.get_str() << "\n\n";
+	cout << "PrivateKey: a=" << priv.a.get_mpz_t() << "\n\n";
+	cout << "PublicKey: A=" << pub.A.get_mpz_t() << "\n\n";
 	
 	unsigned addend1, addend2;
-	cout << "Enter first addend (number in range [0, " << params.modulusBits()
+	cout << "Enter first addend (number in range [0, " << params.keyBits
 			<< ")): " << flush;
 	cin >> addend1;
 	mpz_class expAddend1 = powerOf2(addend1);
 	cout << "addend1=" << addend1
-			<< ", expAddend1=" << expAddend1.get_str() << "\n\n";
-	cout << "Enter second addend (number in range [0, " << params.modulusBits()
+			<< ", expAddend1=" << expAddend1.get_mpz_t() << "\n\n";
+	cout << "Enter second addend (number in range [0, " << params.keyBits
 			<< ")): " << flush;
 	cin >> addend2;
 	mpz_class expAddend2 = powerOf2(addend2);
 	cout << "addend2=" << addend2
-			<< ", expAddend2=" << expAddend2.get_str() << "\n\n";
+			<< ", expAddend2=" << expAddend2.get_mpz_t() << "\n\n";
 	
 	const Ciphertext cipher1 = pub.encrypt(params, expAddend1, rand),
 			cipher2 = pub.encrypt(params, expAddend2, rand);
-	cout << "Ciphertext 1: B=" << cipher1.B.get_str()
-			<< ", c=" << cipher1.c.get_str() << "\n\n";
-	cout << "Ciphertext 2: B=" << cipher2.B.get_str()
-			<< ", c=" << cipher2.c.get_str() << "\n\n";
+	cout << "Ciphertext 1: B=" << cipher1.B.get_mpz_t()
+			<< ", c=" << cipher1.c.get_mpz_t() << "\n\n";
+	cout << "Ciphertext 2: B=" << cipher2.B.get_mpz_t()
+			<< ", c=" << cipher2.c.get_mpz_t() << "\n\n";
 	
 	Ciphertext cipherExpSum = cipher1;
 	cipherExpSum.mult(params, cipher2);
-	cout << "Ciphertext expSum: B=" << cipherExpSum.B.get_str()
-			<< ", c=" << cipherExpSum.c.get_str() << "\n\n";
+	cout << "Ciphertext expSum: B=" << cipherExpSum.B.get_mpz_t()
+			<< ", c=" << cipherExpSum.c.get_mpz_t() << "\n\n";
 	
 	const mpz_class recoveredExpSum = priv.decrypt(params, cipherExpSum);
 	const int recoveredSum = tryLogBase2(params, recoveredExpSum);
-	cout << "recoveredExpSum=" << recoveredExpSum.get_str()
+	cout << "recoveredExpSum=" << recoveredExpSum.get_mpz_t()
 			<< ", recoveredSum=" << recoveredSum << endl;
 }
 
@@ -120,8 +120,8 @@ void testThresholdElGamal(const Params& params, gmp_randclass& rand)
 	const KeyPair keyPair = params.makeKeys(rand);
 	const PrivateKey priv = get<PrivateKey>(keyPair);
 	const PublicKey pub = get<PublicKey>(keyPair);
-	cout << "PrivateKey: a=" << priv.a.get_str() << "\n\n";
-	cout << "PublicKey: A=" << pub.A.get_str() << "\n\n";
+	cout << "PrivateKey: a=" << priv.a.get_mpz_t() << "\n\n";
+	cout << "PublicKey: A=" << pub.A.get_mpz_t() << "\n\n";
 	
 	cout << "Enter number of keyshares: " << flush;
 	unsigned numKeyshares;
@@ -132,18 +132,18 @@ void testThresholdElGamal(const Params& params, gmp_randclass& rand)
 			numKeyshares, numKeyshares, rand);
 	for (auto share : keyshares)
 		cout << "Keyshare: x=" << share.x
-				<< ", y=" << share.y.get_str() << '\n';
+				<< ", y=" << share.y.get_mpz_t() << '\n';
 	cout << '\n';
 	
 	cout << "Enter message (number in range [0, p)): " << flush;
 	string token;
 	cin >> token;
 	const mpz_class msg(token);
-	cout << "msg=" << msg.get_str() << "\n\n";
+	cout << "msg=" << msg.get_mpz_t() << "\n\n";
 	
 	const Ciphertext cipher = pub.encrypt(params, msg, rand);
-	cout << "Ciphertext: B=" << cipher.B.get_str()
-			<< ", c=" << cipher.c.get_str() << "\n\n";
+	cout << "Ciphertext: B=" << cipher.B.get_mpz_t()
+			<< ", c=" << cipher.c.get_mpz_t() << "\n\n";
 	
 	vector<DecryptShare> decryptionShares;
 	decryptionShares.reserve(keyshares.size());
@@ -151,13 +151,16 @@ void testThresholdElGamal(const Params& params, gmp_randclass& rand)
 	{
 		const DecryptShare decryptShare = keyshare.decryptShare(params, cipher);
 		cout << "DecryptShare: x=" << decryptShare.x
-				<< ", share=" << decryptShare.share.get_str() << '\n';
+				<< ", share=" << decryptShare.share.get_mpz_t() << '\n';
 		decryptionShares.push_back(decryptShare);
 	}
 	cout << '\n';
 	
+	const mpz_class recoveredMsgWithPrivKey = priv.decrypt(params, cipher);
+	cout << "recoveredMsg (with private key)="
+			<< recoveredMsgWithPrivKey.get_mpz_t() << '\n';
 	const mpz_class recoveredMsg = cipher.decryptWith(params, decryptionShares);
-	cout << "recoveredMsg=" << recoveredMsg.get_str() << endl;
+	cout << "recoveredMsg=" << recoveredMsg.get_mpz_t() << endl;
 }
 
 int testThresholdElGamalErrorIter(const Params& params, gmp_randclass& rand)
@@ -165,8 +168,8 @@ int testThresholdElGamalErrorIter(const Params& params, gmp_randclass& rand)
 	const KeyPair keyPair = params.makeKeys(rand);
 	const PrivateKey priv = get<PrivateKey>(keyPair);
 	const PublicKey pub = get<PublicKey>(keyPair);
-//	cout << "PrivateKey: a=" << priv.a.get_str() << "\n\n";
-//	cout << "PublicKey: A=" << pub.A.get_str() << "\n\n";
+//	cout << "PrivateKey: a=" << priv.a.get_mpz_t() << "\n\n";
+//	cout << "PublicKey: A=" << pub.A.get_mpz_t() << "\n\n";
 	
 //	cout << "Enter number of keyshares: " << flush;
 	unsigned numKeyshares;
@@ -178,19 +181,19 @@ int testThresholdElGamalErrorIter(const Params& params, gmp_randclass& rand)
 			numKeyshares, numKeyshares, rand);
 //	for (auto share : keyshares)
 //		cout << "Keyshare: x=" << share.x
-//				<< ", y=" << share.y.get_str() << '\n';
+//				<< ", y=" << share.y.get_mpz_t() << '\n';
 //	cout << '\n';
 	
 //	cout << "Enter message (number in range [0, p)): " << flush;
 //	string token;
 //	cin >> token;
 //	const mpz_class msg(token);
-//	cout << "msg=" << msg.get_str() << "\n\n";
+//	cout << "msg=" << msg.get_mpz_t() << "\n\n";
 	const mpz_class msg(1);
 	
 	const Ciphertext cipher = pub.encrypt(params, msg, rand);
-//	cout << "Ciphertext: B=" << cipher.B.get_str()
-//			<< ", c=" << cipher.c.get_str() << "\n\n";
+//	cout << "Ciphertext: B=" << cipher.B.get_mpz_t()
+//			<< ", c=" << cipher.c.get_mpz_t() << "\n\n";
 	
 	vector<DecryptShare> decryptionShares;
 	decryptionShares.reserve(keyshares.size());
@@ -198,13 +201,13 @@ int testThresholdElGamalErrorIter(const Params& params, gmp_randclass& rand)
 	{
 		const DecryptShare decryptShare = keyshare.decryptShare(params, cipher);
 //		cout << "DecryptShare: x=" << decryptShare.x
-//				<< ", share=" << decryptShare.share.get_str() << '\n';
+//				<< ", share=" << decryptShare.share.get_mpz_t() << '\n';
 		decryptionShares.push_back(decryptShare);
 	}
 //	cout << '\n';
 	
 	const mpz_class recoveredMsg = cipher.decryptWith(params, decryptionShares);
-//	cout << "recoveredMsg=" << recoveredMsg.get_str() << endl;
+//	cout << "recoveredMsg=" << recoveredMsg.get_mpz_t() << endl;
 	
 	if (recoveredMsg == 1)
 		return 0;
@@ -241,13 +244,13 @@ int main() {
 	gmp_randclass rand(gmp_randinit_default);
 	rand.seed(time(nullptr));
 	
-	const mpz_class p = examplePrime512;
+	const mpz_class p = examplePrime16;
 	const mpz_class g = rand.get_z_range(p - 3) + 2;
 	const Params params(p, g);
-	cout << "Params: g=" << params.g.get_str()
-			<< ", p=" << params.p.get_str() << "\n\n";
+	cout << "Params: g=" << params.g.get_mpz_t()
+			<< ", p=" << params.p.get_mpz_t() << "\n\n";
 	
-	testThresholdElGamalError(params, rand);
+	testThresholdElGamal(params, rand);
 	
 	return 0;
 }

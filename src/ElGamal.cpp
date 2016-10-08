@@ -12,7 +12,7 @@ namespace ElGamal {
 	
 	int tryLogBase2(const Params& params, const mpz_class& n)
 	{
-		return tryLogBase2(n, 0, params.modulusBits());
+		return tryLogBase2(n, 0, params.keyBits);
 	}
 	
 	int tryLogBase2(const mpz_class& n, unsigned low, unsigned high)
@@ -34,11 +34,6 @@ namespace ElGamal {
 		}
 		
 		return -1;
-	}
-	
-	unsigned Params::modulusBits() const
-	{
-		return mpz_sizeinbase(p.get_mpz_t(), 2);
 	}
 	
 	mpz_class Params::modExp(const mpz_class& base, const mpz_class& pow) const
@@ -130,6 +125,16 @@ namespace ElGamal {
 		mult(params, msg);
 	}
 	
+	istream& operator>>(istream& in, Ciphertext& cipher)
+	{
+		return in >> cipher.B.get_mpz_t() >> cipher.c.get_mpz_t();
+	}
+	
+	ostream& operator<<(ostream& out, const Ciphertext& cipher)
+	{
+		return out << cipher.B.get_mpz_t() << ' ' << cipher.c.get_mpz_t();
+	}
+	
 	Ciphertext PublicKey::compute(const Params& params,
 			gmp_randclass& rand) const
 	{
@@ -156,77 +161,4 @@ namespace ElGamal {
 		return (cipher.c * params.modExp(cipher.B, -a)) % params.p;
 	}
 	
-}
-	#include <iostream>
-	using std::cout;
-	using std::endl;
-namespace ElGamal {
-	vector<Keyshare> PrivateKey::generateShares(const Params& params,
-			const unsigned threshold, const unsigned numShares,
-			gmp_randclass& rand) const
-	{
-		vector<mpz_class> coeffs;
-		coeffs.reserve(threshold - 1);
-		for (unsigned pow = 1; pow < threshold; pow++)
-			coeffs.emplace_back(rand.get_z_range(params.p));
-		
-		vector<Keyshare> shares;
-		coeffs.reserve(numShares);
-		for (unsigned x = 1; x <= numShares; x++)
-		{
-			mpz_class y = a;
-			// DEBUG
-//			cout << "x^0 * " << y.get_str() << " = " << y.get_str() << '\n';
-			for (unsigned pow = 1, xPow = x;
-					pow <= coeffs.size();
-					pow++, xPow *= x)
-					{
-				y += coeffs[pow - 1] * xPow;
-						// DEBUG
-//						cout << "+(x^" << pow << " * " << coeffs[pow - 1].get_str()
-//								<< " = " << mpz_class(coeffs[pow - 1] * xPow).get_str()
-//								<< ") = " << y.get_str() << '\n';
-					}
-				
-			shares.emplace_back(Keyshare(x, y % params.p));
-		}
-		return shares;
-	}
-	
-	mpz_class DecryptShare::lagrangeFactor(const Params& params,
-			const vector<DecryptShare>& shares) const
-	{
-		mpq_class product(1);
-		for (auto share : shares)
-		{
-			if (x == share.x)
-				continue;
-			product *= mpq_class(share.x,
-					static_cast<int>(share.x) - static_cast<int>(x));
-		}
-		
-		product.canonicalize();
-		assert(product.get_den() == 1);
-		return product.get_num();
-	}
-	
-	mpz_class Ciphertext::decryptWith(const Params& params,
-			const vector<DecryptShare>& shares) const
-	{
-		// g^ab, calculated as the product of keyshares ^ Lagrange factor.
-		mpz_class AB(1);
-		for (auto share : shares)
-		{
-			AB *= params.modExp(share.share,
-					share.lagrangeFactor(params, shares));
-		}
-		return (c * params.modInv(AB)) % params.p;
-	}
-	
-	DecryptShare Keyshare::decryptShare(const Params& params,
-			const Ciphertext& cipher) const
-	{
-		return DecryptShare(x, params.modExp(cipher.B, y));
-	}
-
 }
